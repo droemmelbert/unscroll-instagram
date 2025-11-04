@@ -1,1 +1,1 @@
-zip -r -FS ../unscroll.zip * --exclude '*.git*'
+zip -r -FS ../unscroll-instagram.zip * --exclude '*.git*' --exclude 'build.txt' --exclude '.gitignore'
