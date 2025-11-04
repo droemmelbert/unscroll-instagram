@@ -1,5 +1,5 @@
 let hideHome = false;
-let hideSearch = false;
+
 let isHomepage = false;
 let isFollowingpage = false;
 let isSearchpage = false;
@@ -8,7 +8,7 @@ let redirected = false;
 
 let updateSettings = () => {
     let currentURL = window.location.href;
-    isHomepage = /^https:\/\/www\.instagram\.com\/?$/.test(currentURL);
+    isHomepage = /^https:\/\/www\.instagram\.com\/?$/.test(currentURL) || currentURL.includes("/?variant=home");
     isFollowingpage = currentURL.includes("variant=following");
     isSearchpage = currentURL.includes("/explore/");
     isReelspage = currentURL.includes("/reels/");
@@ -17,14 +17,13 @@ updateSettings();
 
 
 // Retrieve user settings from storage
-browser.storage.sync.get(["hideHome", "hideSearch"]).then(settings => {
+browser.storage.sync.get(["hideHome"]).then(settings => {
     hideHome = settings.hideHome ?? false;
-    hideSearch = settings.hideSearch ?? false;
     onPageUpdate();
 });
 
 
-let remReels = () => {
+let remReelsButton = () => {
     let reelsLink = document.querySelector('a[href="/reels/"]');
     if (!reelsLink) {
         return
@@ -37,7 +36,7 @@ let remReels = () => {
     }
 }
 
-let remExplores = () => {
+let remExplorePosts = () => {
     if (isSearchpage) {
         const loader = document.querySelector('svg[aria-label="Loading..."]');
         if (loader) {
@@ -53,7 +52,7 @@ let remExplores = () => {
     }
 }
 
-let remHome = () => {
+let remHomeButton = () => {
     const homeLink = document.querySelectorAll('svg[aria-label="Home"]');
     const homeLinkElement = homeLink[homeLink.length - 1]?.closest('a');
     if (!homeLink.length) {
@@ -67,16 +66,23 @@ let remHome = () => {
     }
 }
 
-let remSearch = () => {
-    let searchLink = document.querySelector('a[href="/explore/"]');
-    if (!searchLink) {
-        return
+let remInstagramLogoButton = () => {
+    const igIcon = document.querySelector('svg[aria-label="Instagram"]');
+    if (igIcon) {
+        const igElement = igIcon.closest('a').parentElement?.parentElement?.parentElement?.parentElement?.parentElement;
+        if (igElement) {
+            igElement.remove();
+        }
     }
-    let container = searchLink.parentElement.parentElement.parentElement;
-    if (container) {
-        container.remove();
-    } else {
-        searchLink.remove();
+}
+
+let remSuggestedFollowers = () => {
+    const suggestedTitle = [...document.querySelectorAll('span')]
+        .find(el => el.textContent.trim() === 'Suggested for you');
+
+    const suggestedContainer = suggestedTitle?.closest('div').parentElement?.parentElement;
+    if (suggestedContainer) {
+        suggestedContainer.remove();
     }
 }
 
@@ -84,40 +90,61 @@ let forwardToMessagesPage = () => {
     window.location.assign('https://www.instagram.com/direct/inbox/');
 }
 
-// automatically forward to following page to avoid seeing recommended posts
+// forward to "following" page to avoid seeing posts of people you don't follow
 let forwardToFollowingPage = () => {
     window.location.assign('https://www.instagram.com/?variant=following');
 }
 
 let onPageUpdate = () => {
+    console.log("Unscroll: page updated");
     updateSettings();
-    if (isReelspage) {
-        if (hideHome) {
-            forwardToMessagesPage();
-        } else {
+
+    if (!redirected) {
+        if (isReelspage) {
+            redirected = true;
+            if (hideHome) {
+                forwardToMessagesPage();
+            } else {
+                forwardToFollowingPage();
+            }
+            return;
+        }
+
+        if (isHomepage && hideHome) {
+            redirected = true;
+            forwardToMessagesPage()
+            return;
+        }
+
+        if (isHomepage) {
+            redirected = true;
             forwardToFollowingPage();
+            return;
         }
     }
 
-    if (isHomepage && !hideHome) {
-        forwardToFollowingPage();
-    }
-    if (hideHome) {
-        remHome();
-    }
-    if (hideSearch) {
-        remSearch();
-    }
-    remReels();
-    remExplores();
-}
+    if (hideHome) remHomeButton();
 
+    remReelsButton();
+    remExplorePosts();
+    remInstagramLogoButton();
+    remSuggestedFollowers();
+};
+
+let updateTimeout;
 let observer = new MutationObserver(function () {
-    onPageUpdate();
+    clearTimeout(updateTimeout);
+    updateTimeout = setTimeout(onPageUpdate, 100);
 });
 
 // Start observing the body for changes
 observer.observe(document.body, {childList: true, subtree: true, attributes: true});
+
+// reset redirected flag on navigation events
+window.addEventListener("popstate", () => redirected = false);
+window.addEventListener("pushstate", () => redirected = false);
+window.addEventListener("replacestate", () => redirected = false);
+
 
 // initial run
 onPageUpdate();
