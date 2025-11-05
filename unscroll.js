@@ -65,16 +65,6 @@ let remHomeButton = () => {
     }
 }
 
-let remInstagramLogoButton = () => {
-    const igIcon = document.querySelector('svg[aria-label="Instagram"]');
-    if (igIcon) {
-        const igElement = igIcon.closest('a').parentElement?.parentElement?.parentElement?.parentElement?.parentElement;
-        if (igElement) {
-            igElement.remove();
-        }
-    }
-}
-
 let remSuggestedFollowers = () => {
     const suggestedTitle = [...document.querySelectorAll('span')]
         .find(el => el.textContent.trim() === 'Suggested for you');
@@ -125,7 +115,6 @@ let onPageUpdate = () => {
 
     remReelsButton();
     remExplorePosts();
-    remInstagramLogoButton();
     remSuggestedFollowers();
 };
 
