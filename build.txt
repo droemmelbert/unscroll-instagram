@@ -1,1 +1,1 @@
-zip -r -FS ../unscroll-instagram.zip * --exclude '*.git*' --exclude 'build.txt' --exclude '.idea'
+zip -r -FS ./unscroll-instagram.zip * --exclude '*.git*' --exclude 'build.txt' --exclude '.idea' --exclude '__MACOSX'

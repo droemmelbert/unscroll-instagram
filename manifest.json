@@ -1,14 +1,13 @@
 {
-  "manifest_version": 2,
-  "name": "Unscroll Instagram",
+  "manifest_version": 3,
+  "name": "Unscroll Instagram v2",
   "description": "Remove scrolling on the homepage of Instagram",
   "version": "2.0",
   "icons": {
     "48": "icons/scroll.png"
   },
   "options_ui": {
-    "page": "options.html",
-    "browser_style": true
+    "page": "options.html"
   },
   "permissions": [
     "storage"
@@ -25,7 +24,7 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "info@sjosch.de",
+      "id": "@unscroll_instagram_v2",
       "data_collection_permissions": {
         "required": [
           "none"
