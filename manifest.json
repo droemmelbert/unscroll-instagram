@@ -10,7 +10,9 @@
     "page": "options.html",
     "browser_style": true
   },
-  "permissions": ["storage"],
+  "permissions": [
+    "storage"
+  ],
   "content_scripts": [
     {
       "js": [
@@ -23,7 +25,12 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "asyncrom@pm.me"
+      "id": "info@sjosch.de",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
     }
   }
 }

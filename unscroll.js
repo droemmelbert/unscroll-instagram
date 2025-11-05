@@ -19,7 +19,6 @@ updateSettings();
 // Retrieve user settings from storage
 browser.storage.sync.get(["hideHome"]).then(settings => {
     hideHome = settings.hideHome ?? false;
-    onPageUpdate();
 });
 
 
@@ -96,7 +95,6 @@ let forwardToFollowingPage = () => {
 }
 
 let onPageUpdate = () => {
-    console.log("Unscroll: page updated");
     updateSettings();
 
     if (!redirected) {
