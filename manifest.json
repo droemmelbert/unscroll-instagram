@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Unscroll Instagram v2",
   "description": "Remove scrolling on the homepage of Instagram",
-  "version": "2.0",
+  "version": "2.1",
   "icons": {
     "48": "icons/scroll.png"
   },
