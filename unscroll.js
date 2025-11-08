@@ -27,7 +27,7 @@ let remReelsButton = () => {
     if (!reelsLink) {
         return
     }
-    let container = reelsLink.parentElement.parentElement.parentElement;
+    let container = reelsLink.parentElement?.parentElement?.parentElement;
     if (container) {
         container.remove();
     } else {
@@ -57,7 +57,7 @@ let remHomeButton = () => {
     if (!homeLink.length) {
         return;
     }
-    let container = homeLinkElement.parentElement.parentElement.parentElement.parentElement;
+    let container = homeLinkElement.parentElement?.parentElement?.parentElement?.parentElement;
     if (container) {
         container.remove();
     } else {
