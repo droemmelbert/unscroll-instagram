@@ -1,9 +1,12 @@
 let hideHome = false;
+let enabled = true;
+let disableStories = false;
 
 let isHomepage = false;
 let isFollowingpage = false;
 let isSearchpage = false;
 let isReelspage = false;
+let isStoriespage = false;
 let redirected = false;
 
 let updateSettings = () => {
@@ -12,13 +15,17 @@ let updateSettings = () => {
     isFollowingpage = currentURL.includes("variant=following");
     isSearchpage = currentURL.includes("/explore/");
     isReelspage = currentURL.includes("/reels/");
+    isStoriespage = currentURL.startsWith("https://www.instagram.com/stories/");
 }
 updateSettings();
 
 
 // Retrieve user settings from storage
-browser.storage.sync.get(["hideHome"]).then(settings => {
+browser.storage.sync.get(["enabled", "hideHome", "disableStories"]).then(settings => {
+    enabled = settings.enabled ?? true;
     hideHome = settings.hideHome ?? false;
+    disableStories = settings.disableStories ?? false;
+    onPageUpdate();
 });
 
 
@@ -75,6 +82,10 @@ let remSuggestedFollowers = () => {
     }
 }
 
+let remStoryTray = () => {
+    document.querySelector('div[data-pagelet="story_tray"]')?.remove();
+}
+
 let forwardToMessagesPage = () => {
     window.location.assign('https://www.instagram.com/direct/inbox/');
 }
@@ -87,7 +98,17 @@ let forwardToFollowingPage = () => {
 let onPageUpdate = () => {
     updateSettings();
 
+    if (!enabled) {
+        return;
+    }
+
     if (!redirected) {
+        if (isStoriespage && disableStories) {
+            redirected = true;
+            forwardToFollowingPage();
+            return;
+        }
+
         if (isReelspage) {
             redirected = true;
             if (hideHome) {
@@ -112,6 +133,7 @@ let onPageUpdate = () => {
     }
 
     if (hideHome) remHomeButton();
+    if (disableStories) remStoryTray();
 
     remReelsButton();
     remExplorePosts();
@@ -131,6 +153,17 @@ observer.observe(document.body, {childList: true, subtree: true, attributes: tru
 window.addEventListener("popstate", () => redirected = false);
 window.addEventListener("pushstate", () => redirected = false);
 window.addEventListener("replacestate", () => redirected = false);
+browser.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName !== "sync") {
+        return;
+    }
+
+    if (changes.enabled) enabled = changes.enabled.newValue ?? true;
+    if (changes.hideHome) hideHome = changes.hideHome.newValue ?? false;
+    if (changes.disableStories) disableStories = changes.disableStories.newValue ?? false;
+    redirected = false;
+    onPageUpdate();
+});
 
 
 // initial run

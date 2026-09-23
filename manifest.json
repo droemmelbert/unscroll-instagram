@@ -6,8 +6,11 @@
   "icons": {
     "48": "icons/scroll.png"
   },
-  "options_ui": {
-    "page": "options.html"
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "48": "icons/scroll.png"
+    }
   },
   "permissions": [
     "storage"

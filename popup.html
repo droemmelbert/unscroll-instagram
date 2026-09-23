@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Unscroll Instagram</title>
+  <style>
+    body {
+      width: 220px;
+      padding: 12px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .power-button {
+      width: 44px;
+      height: 26px;
+      padding: 0;
+      border: 1px solid #bdbdbd;
+      border-radius: 999px;
+      background-color: #cfcfcf;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .power-button.on {
+      background-color: #4caf50;
+      border-color: #3f8f42;
+    }
+
+    .power-button::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    }
+
+    .power-button.on::after {
+      left: 23px;
+    }
+
+    .settings-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .settings-group.disabled {
+      opacity: 0.5;
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    input[type="checkbox"] {
+      cursor: pointer;
+    }
+
+    input[type="checkbox"]:disabled {
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+<div class="header">
+  <h2>Unscroll Instagram</h2>
+  <button id="powerButton" class="power-button" type="button"
+          title="Toggle extension on/off" aria-label="Toggle extension" aria-checked="true"></button>
+</div>
+
+<div class="settings-group" id="settingsGroup">
+  <label>
+    <input type="checkbox" data-setting="hideHome">
+    Hide Home
+  </label>
+  <label>
+    <input type="checkbox" data-setting="disableStories">
+    Disable Stories
+  </label>
+</div>
+<script src="popup.js"></script>
+</body>
+</html>
