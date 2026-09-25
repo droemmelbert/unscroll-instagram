@@ -1,0 +1,23 @@
+html.unscroll a[href="/reels/"],
+html.unscroll :is(div, span):has(> :is(div, span) > :is(div, span) > a[href="/reels/"]) {
+  display: none !important;
+}
+
+html.unscroll-explore a[href*="/p/"],
+html.unscroll-explore a[href*="/reel/"],
+html.unscroll-explore svg[aria-label="Loading..."] {
+  display: none !important;
+}
+
+html.unscroll-no-home a:has(svg[aria-label="Home"]),
+html.unscroll-no-home :is(div, span):has(> :is(div, span) > :is(div, span) > :is(div, span) > a:has(svg[aria-label="Home"])) {
+  display: none !important;
+}
+
+html.unscroll-no-stories [data-pagelet="story_tray"] {
+  display: none !important;
+}
+
+html.unscroll .unscroll-hide {
+  display: none !important;
+}
