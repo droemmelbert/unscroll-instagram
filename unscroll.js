@@ -20,11 +20,131 @@ html.unscroll-no-home a:has(svg[aria-label="Home"]),
 html.unscroll-no-home :is(div,span):has(> :is(div,span) > :is(div,span) > :is(div,span) > a:has(svg[aria-label="Home"])){display:none!important}
 html.unscroll-no-stories [data-pagelet="story_tray"]{display:none!important}
 .unscroll-hide{display:none!important}
+html.unscroll div[role="dialog"] button[aria-label*="Next" i],
+html.unscroll div[role="dialog"] button[aria-label*="Previous" i],
+html.unscroll div[role="dialog"] button[aria-label*="Nächste" i],
+html.unscroll div[role="dialog"] button[aria-label*="Vorherige" i],
+html.unscroll div[role="dialog"] div[role="button"]:has(svg[aria-label*="Next" i]),
+html.unscroll div[role="dialog"] div[role="button"]:has(svg[aria-label*="Previous" i]) {
+  display: none !important;
+}
 `;
 root.prepend(style);
 
 const inbox = "https://www.instagram.com/direct/inbox/";
 const following = "https://www.instagram.com/?variant=following";
+
+const BLOCKED_REEL_KEYS = new Set(["ArrowDown", "ArrowUp", "PageDown", "PageUp"]);
+const NAV_BUTTON_REGEX = /next|nächste|previous|vorherige|\bdown\b|\bup\b/i;
+const CLOSE_BUTTON_REGEX = /close|schließen/i;
+
+function getReelOverlay() {
+  const dialog = document.querySelector('div[role="dialog"]');
+  if (dialog && (dialog.querySelector("video") || dialog.querySelector('a[href*="/reel/"]'))) {
+    return dialog;
+  }
+
+  const videos = document.querySelectorAll("video");
+  for (const video of videos) {
+    let el = video.parentElement;
+    while (el && el !== document.body && el !== document.documentElement) {
+      const rect = el.getBoundingClientRect();
+      if (rect.height > window.innerHeight * 0.7 && rect.width > 300) {
+        const computed = window.getComputedStyle(el);
+        if (
+          computed.position === "fixed" ||
+          computed.position === "absolute" ||
+          el.getAttribute("role") === "dialog"
+        ) {
+          return el;
+        }
+      }
+      el = el.parentElement;
+    }
+  }
+  return null;
+}
+
+function lockReelScroll(overlay) {
+  if (!overlay) return;
+  overlay.style.setProperty("overflow", "hidden", "important");
+  overlay.style.setProperty("scroll-snap-type", "none", "important");
+  overlay.style.setProperty("touch-action", "none", "important");
+  overlay.style.setProperty("overscroll-behavior", "contain", "important");
+
+  const scrollables = overlay.querySelectorAll("div, article, section");
+  for (const el of scrollables) {
+    if (el.scrollHeight > el.clientHeight && el.clientHeight > window.innerHeight * 0.5) {
+      el.style.setProperty("overflow-y", "hidden", "important");
+      el.style.setProperty("scroll-snap-type", "none", "important");
+      el.style.setProperty("touch-action", "none", "important");
+    }
+  }
+}
+
+function isEventInReelOverlay(e) {
+  const overlay = getReelOverlay();
+  return Boolean(overlay && (overlay === e.target || overlay.contains(e.target)));
+}
+
+function blockReelScrollEvent(e) {
+  if (!enabled || !ready) return;
+  if (isEventInReelOverlay(e)) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+  }
+}
+
+window.addEventListener("wheel", blockReelScrollEvent, { capture: true, passive: false });
+window.addEventListener("touchmove", blockReelScrollEvent, { capture: true, passive: false });
+
+window.addEventListener(
+  "keydown",
+  (e) => {
+    if (!enabled || !ready || !BLOCKED_REEL_KEYS.has(e.key)) return;
+    if (!getReelOverlay()) return;
+
+    const activeEl = document.activeElement;
+    if (
+      activeEl?.tagName === "INPUT" ||
+      activeEl?.tagName === "TEXTAREA" ||
+      activeEl?.isContentEditable
+    ) {
+      return;
+    }
+
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+  },
+  { capture: true }
+);
+
+window.addEventListener(
+  "click",
+  (e) => {
+    if (!enabled || !ready) return;
+    const overlay = getReelOverlay();
+    if (!overlay) return;
+
+    const btn = e.target.closest('button, [role="button"]');
+    if (btn && overlay.contains(btn)) {
+      const label = (
+        btn.getAttribute("aria-label") ||
+        btn.querySelector("svg")?.getAttribute("aria-label") ||
+        ""
+      );
+
+      if (NAV_BUTTON_REGEX.test(label) && !CLOSE_BUTTON_REGEX.test(label)) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+      }
+    }
+  },
+  { capture: true }
+);
 
 function apply() {
   const path = location.pathname;
@@ -54,6 +174,11 @@ function apply() {
     const link = icons[icons.length - 1]?.closest("a");
     const box = link?.parentElement?.parentElement?.parentElement?.parentElement || link;
     box?.classList.add("unscroll-hide");
+  }
+
+  const overlay = getReelOverlay();
+  if (overlay) {
+    lockReelScroll(overlay);
   }
 
   if (suggestedDone || !document.body) return;
