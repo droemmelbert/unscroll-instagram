@@ -20,12 +20,12 @@ html.unscroll-no-home a:has(svg[aria-label="Home"]),
 html.unscroll-no-home :is(div,span):has(> :is(div,span) > :is(div,span) > :is(div,span) > a:has(svg[aria-label="Home"])){display:none!important}
 html.unscroll-no-stories [data-pagelet="story_tray"]{display:none!important}
 .unscroll-hide{display:none!important}
-html.unscroll div[role="dialog"] button[aria-label*="Next" i],
-html.unscroll div[role="dialog"] button[aria-label*="Previous" i],
-html.unscroll div[role="dialog"] button[aria-label*="Nächste" i],
-html.unscroll div[role="dialog"] button[aria-label*="Vorherige" i],
-html.unscroll div[role="dialog"] div[role="button"]:has(svg[aria-label*="Next" i]),
-html.unscroll div[role="dialog"] div[role="button"]:has(svg[aria-label*="Previous" i]) {
+html.unscroll-direct div[role="dialog"] button[aria-label*="Next" i],
+html.unscroll-direct div[role="dialog"] button[aria-label*="Previous" i],
+html.unscroll-direct div[role="dialog"] button[aria-label*="Nächste" i],
+html.unscroll-direct div[role="dialog"] button[aria-label*="Vorherige" i],
+html.unscroll-direct div[role="dialog"] div[role="button"]:has(svg[aria-label*="Next" i]),
+html.unscroll-direct div[role="dialog"] div[role="button"]:has(svg[aria-label*="Previous" i]) {
   display: none !important;
 }
 `;
@@ -38,7 +38,25 @@ const BLOCKED_REEL_KEYS = new Set(["ArrowDown", "ArrowUp", "PageDown", "PageUp"]
 const NAV_BUTTON_REGEX = /next|nächste|previous|vorherige|\bdown\b|\bup\b/i;
 const CLOSE_BUTTON_REGEX = /close|schließen/i;
 
+const lockedElements = new Set();
+
+function unlockAll() {
+  for (const el of lockedElements) {
+    el.style.removeProperty("overflow");
+    el.style.removeProperty("overflow-y");
+    el.style.removeProperty("scroll-snap-type");
+    el.style.removeProperty("touch-action");
+    el.style.removeProperty("overscroll-behavior");
+  }
+  lockedElements.clear();
+}
+
 function getReelOverlay() {
+  if (location.pathname.startsWith("/p/")) {
+    unlockAll();
+    return null;
+  }
+
   const dialog = document.querySelector('div[role="dialog"]');
   if (dialog && (dialog.querySelector("video") || dialog.querySelector('a[href*="/reel/"]'))) {
     return dialog;
@@ -71,6 +89,7 @@ function lockReelScroll(overlay) {
   overlay.style.setProperty("scroll-snap-type", "none", "important");
   overlay.style.setProperty("touch-action", "none", "important");
   overlay.style.setProperty("overscroll-behavior", "contain", "important");
+  lockedElements.add(overlay);
 
   const scrollables = overlay.querySelectorAll("div, article, section");
   for (const el of scrollables) {
@@ -78,11 +97,13 @@ function lockReelScroll(overlay) {
       el.style.setProperty("overflow-y", "hidden", "important");
       el.style.setProperty("scroll-snap-type", "none", "important");
       el.style.setProperty("touch-action", "none", "important");
+      lockedElements.add(el);
     }
   }
 }
 
 function isEventInReelOverlay(e) {
+  if (location.pathname.startsWith("/p/")) return false;
   const overlay = getReelOverlay();
   return Boolean(overlay && (overlay === e.target || overlay.contains(e.target)));
 }
@@ -103,7 +124,7 @@ window.addEventListener(
   "keydown",
   (e) => {
     if (!enabled || !ready || !BLOCKED_REEL_KEYS.has(e.key)) return;
-    if (!getReelOverlay()) return;
+    if (location.pathname.startsWith("/p/") || !getReelOverlay()) return;
 
     const activeEl = document.activeElement;
     if (
@@ -124,7 +145,7 @@ window.addEventListener(
 window.addEventListener(
   "click",
   (e) => {
-    if (!enabled || !ready) return;
+    if (!enabled || !ready || location.pathname.startsWith("/p/")) return;
     const overlay = getReelOverlay();
     if (!overlay) return;
 
@@ -151,6 +172,7 @@ function apply() {
   const search = location.search;
   const feed = path === "/";
   const onFollowing = search.includes("variant=following");
+  const onDirect = path.startsWith("/direct");
   const reels = path.startsWith("/reels");
   const stories = path.startsWith("/stories");
   const explore = path.startsWith("/explore");
@@ -159,6 +181,7 @@ function apply() {
   root.classList.toggle("unscroll-explore", enabled && explore);
   root.classList.toggle("unscroll-no-home", enabled && hideHome);
   root.classList.toggle("unscroll-no-stories", enabled && disableStories);
+  root.classList.toggle("unscroll-direct", enabled && onDirect);
 
   if (!enabled || !ready) return;
 
