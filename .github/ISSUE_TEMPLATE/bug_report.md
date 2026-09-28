@@ -29,7 +29,8 @@ If applicable, add screenshots to help explain your problem.
  - Extension Version [e.g. v2.2]
 
 **Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
+ - Device Manufacturer: [e.g. Samsung]
+ - Device Model: [e.g. Galaxy S26]
  - OS: [e.g. iOS8.1/Android 12]
  - Firefox Version [e.g. 156.0.1]
  - Extension Version [e.g. v2.2]
