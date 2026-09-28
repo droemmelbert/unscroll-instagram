@@ -1,102 +1,258 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Unscroll Instagram</title>
-  <style>
-    body {
-      width: 220px;
-      padding: 12px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unscroll Instagram</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #1f2937;
+            --text-secondary: #6b7280;
+            --card-border: #e5e7eb;
+            --item-hover: #f9fafb;
+            --primary: #528c1d;
+            --primary-hover: #457618;
+            --toggle-off: #d1d5db;
+            --toggle-thumb: #ffffff;
+            --focus-ring: rgba(82, 140, 29, 0.4);
+        }
 
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #1a1a1e;
+                --text-color: #f3f4f6;
+                --text-secondary: #9ca3af;
+                --card-border: #2e2e36;
+                --item-hover: #24242b;
+                --primary: #65a826;
+                --primary-hover: #528c1d;
+                --toggle-off: #4b5563;
+                --toggle-thumb: #f9fafb;
+                --focus-ring: rgba(101, 168, 38, 0.4);
+            }
+        }
 
-    h2 {
-      margin: 0;
-      font-size: 14px;
-    }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-    .power-button {
-      width: 44px;
-      height: 26px;
-      padding: 0;
-      border: 1px solid #bdbdbd;
-      border-radius: 999px;
-      background-color: #cfcfcf;
-      cursor: pointer;
-      position: relative;
-    }
+        body {
+            width: 320px;
+            padding: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: 13px;
+            line-height: 1.4;
+            user-select: none;
+        }
 
-    .power-button.on {
-      background-color: #4caf50;
-      border-color: #3f8f42;
-    }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--card-border);
+            margin-bottom: 12px;
+        }
 
-    .power-button::after {
-      content: "";
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: white;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
-    }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-    .power-button.on::after {
-      left: 23px;
-    }
+        .brand-icon {
+            width: 22px;
+            height: 22px;
+        }
 
-    .settings-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+        .brand h1 {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            color: var(--text-color);
+        }
 
-    .settings-group.disabled {
-      opacity: 0.5;
-    }
+        .power-switch {
+            width: 44px;
+            height: 24px;
+            border-radius: 999px;
+            background-color: var(--toggle-off);
+            position: relative;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+        }
 
-    label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-    }
+        .power-switch:focus-visible {
+            box-shadow: 0 0 0 3px var(--focus-ring);
+        }
 
-    input[type="checkbox"] {
-      cursor: pointer;
-    }
+        .power-switch.on {
+            background-color: #528c1d;
+        }
 
-    input[type="checkbox"]:disabled {
-      cursor: not-allowed;
-    }
-  </style>
+        @media (prefers-color-scheme: dark) {
+            .power-switch.on {
+                background-color: #65a826;
+            }
+        }
+
+        .power-switch::after {
+            content: "";
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: var(--toggle-thumb);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .power-switch.on::after {
+            transform: translateX(20px);
+        }
+
+        .settings-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            transition: opacity 0.2s ease;
+        }
+
+        .settings-list.disabled {
+            opacity: 0.45;
+            pointer-events: none;
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 7px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        .setting-item:hover {
+            background-color: var(--item-hover);
+        }
+
+        .setting-label {
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            flex-grow: 1;
+            padding-right: 10px;
+        }
+
+        .setting-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .setting-checkbox {
+            position: relative;
+            width: 17px;
+            height: 17px;
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: transparent;
+            border: 1.5px solid var(--toggle-off);
+            border-radius: 4px;
+            cursor: pointer;
+            display: grid;
+            place-content: center;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .setting-checkbox:hover {
+            border-color: var(--primary);
+        }
+
+        .setting-checkbox:checked {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .setting-checkbox:checked::before {
+            content: "";
+            width: 9px;
+            height: 5px;
+            border-left: 2px solid #ffffff;
+            border-bottom: 2px solid #ffffff;
+            transform: rotate(-45deg) translate(1px, -1px);
+        }
+
+        .setting-checkbox:focus-visible {
+            box-shadow: 0 0 0 3px var(--focus-ring);
+        }
+
+        .footer {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .footer a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.15s ease;
+        }
+
+        .footer a:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-<div class="header">
-  <h2>Unscroll Instagram</h2>
-  <button id="powerButton" class="power-button" type="button"
-          title="Toggle extension on/off" aria-label="Toggle extension" aria-checked="true"></button>
-</div>
+    <div class="header">
+        <div class="brand">
+            <img class="brand-icon" src="icons/scroll.png" alt="Scroll Icon">
+            <h1>Unscroll Instagram</h1>
+        </div>
+        <button id="powerButton" class="power-switch on" role="switch" aria-checked="true"
+                aria-label="Enable extension" title="Toggle extension on/off"></button>
+    </div>
 
-<div class="settings-group" id="settingsGroup">
-  <label>
-    <input type="checkbox" data-setting="hideHome">
-    Disable Feed (only show Inbox)
-  </label>
-  <label>
-    <input type="checkbox" data-setting="disableStories">
-    Disable Stories
-  </label>
-</div>
-<script src="popup.js"></script>
+    <div class="settings-list" id="settingsList">
+        <label class="setting-item" for="hideHome">
+            <span class="setting-label">
+                <span class="setting-title">Disable Feed (only show Inbox)</span>
+            </span>
+            <input type="checkbox" id="hideHome" class="setting-checkbox" data-setting="hideHome">
+        </label>
+
+        <label class="setting-item" for="disableStories">
+            <span class="setting-label">
+                <span class="setting-title">Disable Stories</span>
+            </span>
+            <input type="checkbox" id="disableStories" class="setting-checkbox" data-setting="disableStories">
+        </label>
+    </div>
+
+    <div class="footer">
+        <span>v2.4</span>
+        <a href="https://github.com/droemmelbert/unscroll-instagram/issues" target="_blank" rel="noopener">Feedback & Issues</a>
+    </div>
+
+    <script src="popup.js"></script>
 </body>
 </html>

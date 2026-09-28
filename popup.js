@@ -2,16 +2,13 @@ const api = globalThis.browser ?? globalThis.chrome;
 const defaults = { enabled: true, hideHome: false, disableStories: false };
 
 const powerButton = document.querySelector("#powerButton");
-const settingsGroup = document.querySelector("#settingsGroup");
+const settingsList = document.querySelector("#settingsList");
 const checkboxes = document.querySelectorAll("input[type=checkbox][data-setting]");
 
 const updateControls = (on) => {
   powerButton.classList.toggle("on", on);
   powerButton.setAttribute("aria-checked", String(on));
-  settingsGroup.classList.toggle("disabled", !on);
-  checkboxes.forEach((el) => {
-    el.disabled = !on;
-  });
+  settingsList.classList.toggle("disabled", !on);
 };
 
 api.storage.sync.get(defaults).then((data) => {
