@@ -37,8 +37,11 @@ const following = "https://www.instagram.com/?variant=following";
 const BLOCKED_REEL_KEYS = new Set(["ArrowDown", "ArrowUp", "PageDown", "PageUp"]);
 const NAV_BUTTON_REGEX = /next|nächste|previous|vorherige|\bdown\b|\bup\b/i;
 const CLOSE_BUTTON_REGEX = /close|schließen/i;
+const INTERACTIVE_SELECTOR =
+  'a, button, input, select, textarea, [contenteditable="true"], [role="button"], [role="link"], [role="slider"]';
 
 const lockedElements = new Set();
+let lockedOverlay = null;
 
 function unlockAll() {
   for (const el of lockedElements) {
@@ -49,6 +52,7 @@ function unlockAll() {
     el.style.removeProperty("overscroll-behavior");
   }
   lockedElements.clear();
+  lockedOverlay = null;
 }
 
 function getReelOverlay() {
@@ -85,9 +89,12 @@ function getReelOverlay() {
 
 function lockReelScroll(overlay) {
   if (!overlay) return;
+  if (lockedOverlay !== overlay) {
+    unlockAll();
+    lockedOverlay = overlay;
+  }
   overlay.style.setProperty("overflow", "hidden", "important");
   overlay.style.setProperty("scroll-snap-type", "none", "important");
-  overlay.style.setProperty("touch-action", "none", "important");
   overlay.style.setProperty("overscroll-behavior", "contain", "important");
   lockedElements.add(overlay);
 
@@ -96,7 +103,6 @@ function lockReelScroll(overlay) {
     if (el.scrollHeight > el.clientHeight && el.clientHeight > window.innerHeight * 0.5) {
       el.style.setProperty("overflow-y", "hidden", "important");
       el.style.setProperty("scroll-snap-type", "none", "important");
-      el.style.setProperty("touch-action", "none", "important");
       lockedElements.add(el);
     }
   }
@@ -108,9 +114,13 @@ function isEventInReelOverlay(e) {
   return Boolean(overlay && (overlay === e.target || overlay.contains(e.target)));
 }
 
+function isInteractiveControl(target) {
+  return target instanceof Element && Boolean(target.closest(INTERACTIVE_SELECTOR));
+}
+
 function blockReelScrollEvent(e) {
   if (!enabled || !ready) return;
-  if (isEventInReelOverlay(e)) {
+  if (isEventInReelOverlay(e) && !isInteractiveControl(e.target)) {
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
@@ -130,7 +140,8 @@ window.addEventListener(
     if (
       activeEl?.tagName === "INPUT" ||
       activeEl?.tagName === "TEXTAREA" ||
-      activeEl?.isContentEditable
+      activeEl?.isContentEditable ||
+      isInteractiveControl(activeEl)
     ) {
       return;
     }
@@ -202,6 +213,8 @@ function apply() {
   const overlay = getReelOverlay();
   if (overlay) {
     lockReelScroll(overlay);
+  } else {
+    unlockAll();
   }
 
   if (suggestedDone || !document.body) return;
